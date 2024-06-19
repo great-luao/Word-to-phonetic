@@ -1,6 +1,0 @@
-0.00 Hello
-0.50 world
-1.00 this
-1.50 is
-2.00 a
-2.50 test
