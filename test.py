@@ -3,8 +3,8 @@
 # translator = google_translator()
 # translate_text = translator.translate('abs',lang_tgt='en')
 
-from deep_translator import GoogleTranslator
+from deep_translator import LingueeTranslator
 
 # Use any translator you like, in this example GoogleTranslator
-translated = GoogleTranslator(source='auto', target='zh-CN').translate_file('yrc/3852042.yrc.txt')
-# print(translated)
+translated = LingueeTranslator(source='auto', target='chinese')._translate_file('yrc/3852042.yrc.txt')
+print(translated)
