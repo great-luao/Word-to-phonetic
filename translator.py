@@ -7,7 +7,7 @@ from deep_translator import GoogleTranslator
 from chatgpt_api import GPT_TRANSLATOR
 
 # Define the translate class
-class Translate:
+class Translator:
     def __init__(self, 
                  yrc_dir: str, 
                  yrcy_dir: str, 
