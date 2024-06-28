@@ -1,0 +1,1 @@
+from chatgpt_api import GPT_TRANSLATOR
