@@ -29,7 +29,7 @@ class Translator:
         self.yrc_files = []
         if test:
             # test the translation
-            self.yrc_files = [os.path.join(self.yrc_dir, '19292984.yrc.txt')]
+            self.yrc_files = [os.path.join(self.yrc_dir, '447925342.yrc.txt')]
         else:
             self.yrc_files = list_txt_files(self.yrc_dir)
             # Remove the last file in the list
