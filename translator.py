@@ -5,6 +5,13 @@ import os
 import numpy as np
 from deep_translator import GoogleTranslator
 from chatgpt_api import GPT_TRANSLATOR
+from text2ipa import get_IPA
+
+TRANS_DICT = {
+    'A': "一个",
+    'a': "一个",
+}
+
 
 # Define the translate class
 class Translator:
@@ -29,7 +36,7 @@ class Translator:
         self.yrc_files = []
         if test:
             # test the translation
-            self.yrc_files = [os.path.join(self.yrc_dir, '447925342.yrc.txt')]
+            self.yrc_files = [os.path.join(self.yrc_dir, '16343632.yrc.txt')]
         else:
             self.yrc_files = list_txt_files(self.yrc_dir)
             # Remove the last file in the list
@@ -45,14 +52,21 @@ class Translator:
                 lines = infile.readlines()
                 file_pre_process(lines)
                 for line in lines:
+                    # translated = convert_sentence_to_phoneme(line)
+                    # yrcy.write(translated)
                     # find and split parts as [], () and words
-                    parts = re.findall(r'\[.*?\]|\(.*?\)|\w+|[^\s\w]', line)
+                    parts = re.findall(r'\[.*?\]|\(.*?\)|\b\w+(?:\'\w+)?+(?:\'+)?|[^\s\w]', line)
                     for part in parts:
-                        if not re.match (r'\w+', part): # 单词部分
-                            yrcy.write(part)
-                        else:
+                        if not re.match(r'^\[.*?\]$|^\(.*?\)$|^[^\s\w]$', part): # 单词部分
+                            # part = part.replace("'", "")
+                            # If the word has "in'" at last, replace it as "ing"
+                            if part[-3:] == "in'":
+                                part = part[:-3] + "ing"
                             phoneme = convert_word_to_phoneme(part)
+                            phoneme = phoneme.replace('*', '')
                             yrcy.write(phoneme)
+                        else:
+                            yrcy.write(part)
                     yrcy.write('\n')
         print("处理完成，音标已写入输出文件。")
 
@@ -89,11 +103,11 @@ class Translator:
             lines = []
             for line in temp_lines:
                 # find and split parts as [], () and words
-                parts = re.findall(r'\[.*?\]|\(.*?\)|\w+|[^\s\w]', line)
-                for part in parts:
-                    if re.match (r'\w+', part): # 单词部分
-                        # add a '|' after the word
-                        line = line.replace(part, part+"|") 
+                # parts = re.findall(r'\[.*?\]|\(.*?\)|\w+|[^\s\w]', line)
+                # for part in parts:
+                #     if re.match (r'\w+', part): # 单词部分
+                #         # add a '|' after the word
+                #         line = line.replace(part, part+"|") 
                 lines.append(line)
 
             ### Write one line by line
@@ -101,8 +115,23 @@ class Translator:
                 last_part = ''
                 for line in lines:
                     # translate the line and check the style
-                    translated = GoogleTranslator(source='en', target='zh-CN').translate(line)
-                    translated = translated.replace("'", "").replace('|','').replace("（", "(").replace("）", ")").replace(' ', '')       
+                    translated = GoogleTranslator(source='en', target='zh-CN').translate(line) + '\n'
+
+                    # count the number of english words and chinese words
+                    chinese_words = re.findall(r'[\u4e00-\u9fff]+', translated)
+                    english_words = re.findall(r"[a-zA-Z]+(?:'[a-zA-Z]+)?", line)
+                    if(len(chinese_words) != len(english_words)):
+                        # rewrite the translated line
+                        # this time we translate the word one by one
+                        # print(line, english_words)
+                        # print(translated, chinese_words)
+                        pattern = re.compile(r"[a-zA-Z]+(?:'[a-zA-Z]+)?")
+                        translated = pattern.sub(lambda x: GoogleTranslator(source='en', target='zh-CN').translate(x.group(0)), line)
+                        try:
+                            translated = pattern.sub(lambda x: TRANS_DICT[x.group(0)], translated)
+                        except:
+                            print(f"Warning: 未找到{translated}中部分的中文翻译")
+                            pass
                     # print(translated)
                     # find and split parts as [], () and words
                     # parts = re.findall(r'\[.*?\]|\(.*?\)|\w+|[^\s\w]', translated)
@@ -119,7 +148,8 @@ class Translator:
                     #                 translated = translated.replace(last_part, new_part)
                     #                 print(f'替换 {last_part} 为 {new_part}')
                     #         last_part = part
-                    yrccn.write(translated+'\n')
+                    translated = translated.replace("'", "").replace('|','').replace("（", "(").replace("）", ")").replace(' ', '')
+                    yrccn.write(translated)
 
         ### Write the whole file
         # translated = GoogleTranslator(source='auto', target='zh-CN').translate_file('temp_file.txt')
@@ -163,10 +193,19 @@ def convert_word_to_phoneme(word):
     # we use ipa now instead of pronouncing
     # phonemes = ipa.ipa_list(word)
     phonemes = ipa.convert(word)
+    # phonemes = get_IPA(word, 'en')
     if phonemes:
         return phonemes
         # return ' '.join(phonemes[0])  # the output is a 2-d list.
     return word  
+
+# 转换整句句子到对应的音标
+def convert_sentence_to_phoneme(sentence:str):
+    # phonemes = ipa.convert(sentence)
+    phonemes = get_IPA(sentence, 'en')
+    if phonemes:
+        return phonemes
+    return sentence
 
 # 转换单词到对应46级信息
 def convert_word_to_46(word, CET4_dict, CET6_dict):

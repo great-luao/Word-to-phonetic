@@ -8,7 +8,7 @@ class GPT_TRANSLATOR:
     def __init__(self):
         self.client = OpenAI(
             # This is the default and can be omitted
-            api_key= 'sk-proj-isch1H7MjMpMmXVaBbb4T3BlbkFJlJSewogYekH8r2DGidH6'
+            api_key= ''
         )
         self.messages = [ {"role": "system", "content":  
               "你是一个智能翻译机，我会给你一句英文歌词, 然后我会给你其中一个单词，你要联系句子直接告诉我这个单词对应的简短的中文, 不需要翻译整句句子。"},

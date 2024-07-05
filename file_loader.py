@@ -60,7 +60,7 @@ class FILE_LOADER:
             yrc_content[0] = yrc_content[0].replace(key, REPLACE_DICT[key])
         # yrc_content[0] = yrc_content[0].replace('（', '(').replace('）', ')').replace("’", "'").replace("‘", "'")
         # Check the Chinese pattern
-        yrc_content = yrc_content[0].split('&#xa;')
+        yrc_content = yrc_content[0].split('\n')
         # print(yrc_content)
         chinese_pattern = re.compile(r'[\u4e00-\u9fff]')
         filtered_lines = [line for line in yrc_content if not chinese_pattern.search(line)]
@@ -74,7 +74,7 @@ class FILE_LOADER:
         with open(file_pos, 'w', encoding = 'utf-8') as yrc_file:
             for line in merged_lines:
                 yrc_file.write(f"{line}\n")
-        # print(f"内容已保存到{target_id} yrc.txt 文件中。")
+        print(f"内容已保存到{target_id} yrc.txt 文件中。")
         return True
 
     def load_all_yrc(self) -> None:
@@ -113,6 +113,17 @@ class FILE_LOADER:
             # 生成json文件
             self.output_single_json(target_id, song_dir)
 
+    def output_all_json(self, json_dir:str ) -> None:
+        # 读取 Excel 文件
+        df = pd.read_excel(self.file_path)
+        # 遍历yrc文件夹
+        for file in os.listdir(self.yrc_dir):
+            # 获取歌曲id
+            target_id = int(file.split('.')[0])
+            target_dir = os.path.join(json_dir, str(target_id))
+            if not os.path.exists(target_dir):
+                os.makedirs(target_dir)
+            self.output_single_json(target_id, target_dir)
 
     def output_single_json(self, target_id: int, json_dir:str) -> None:
         # json格式: {"song": "歌曲名", "singer": "歌手"，krc: "krc歌词", "translate": "yrccn", 
